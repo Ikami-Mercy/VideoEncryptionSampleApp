@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".EncryptionActivity">
+
+    <!--image view to display an image-->
+    <ImageView
+        android:id="@+id/iVimage"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:layout_margin="10dp"
+        android:padding="10dp" />
+
+    <!--button to encrypt the image-->
+    <Button
+        android:id="@+id/idBtnEncrypt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/iVimage"
+        android:layout_margin="10dp"
+        android:text="Encrypt" />
+
+    <!--button to decrypt the image-->
+    <Button
+        android:id="@+id/idBtnDecrypt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/idBtnEncrypt"
+        android:layout_margin="10dp"
+        android:text="Decrypt" />
+
+</RelativeLayout>
+
+
+
+
+
+
+
