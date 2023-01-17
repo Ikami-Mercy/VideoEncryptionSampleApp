@@ -1,35 +1,35 @@
 package com.ikami.encryptionsample
 
 import android.annotation.SuppressLint
-import android.content.ContentResolver
+import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.OpenableColumns
+import android.provider.Settings
+import android.util.Base64
+import android.util.Log
 import android.widget.Button
-import android.widget.VideoView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.net.toUri
 import androidx.security.crypto.EncryptedFile
 import androidx.security.crypto.MasterKey
-import androidx.security.crypto.MasterKeys
-import com.google.crypto.tink.KeysetHandle
-import com.google.crypto.tink.StreamingAead
-import com.google.crypto.tink.streamingaead.StreamingAeadConfig
-import com.google.crypto.tink.streamingaead.StreamingAeadFactory
-import com.google.crypto.tink.streamingaead.StreamingAeadKeyTemplates.AES128_CTR_HMAC_SHA256_4KB
+import com.ikami.encryptionsample.utils.EncryptionUtil
+import com.ikami.encryptionsample.utils.FileUtil
 import java.io.*
-import java.security.GeneralSecurityException
 
 
 class MainActivity : AppCompatActivity() {
     private var encryptedVideoFile = ""
     private lateinit var masterKey: MasterKey
     private lateinit var pickVideoLauncher: ActivityResultLauncher<String>
-    private lateinit var videoView: VideoView
+    private lateinit var pickTextFileLauncher: ActivityResultLauncher<String>
+    private lateinit var encryptedVideoString: String
+    private val util = FileUtil()
+    private val encryptionUtils = EncryptionUtil()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,49 +40,8 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    private fun decryptVideo(streamingAead: StreamingAead, associatedData: ByteArray,uri: Uri) {
-
-
-        println("decryptVideo method called ======")
-
-        val inputFile = File(uri.toString())
-        val outputFile = File.createTempFile("decrypted", ".mp4")
-
-        println("inputFile path ====== ${inputFile.absolutePath}")
-        println("inputFile name ====== ${inputFile.name}")
-
-        val ciphertextStream: InputStream = streamingAead.newDecryptingStream(FileInputStream(inputFile), associatedData)
-        val plaintextStream: OutputStream = FileOutputStream(outputFile)
-        val chunk = ByteArray(1024)
-        var chunkLen = 0
-        while (ciphertextStream.read(chunk).also { chunkLen = it } != -1) {
-            plaintextStream.write(chunk, 0, chunkLen)
-        }
-        ciphertextStream.close();
-        plaintextStream.close();
-    }
-
     private fun initializeUI() {
         println("initializeUI called ======")
-
-        // Setup SELECT VIDEO button
-        findViewById<Button>(R.id.button_select_video).setOnClickListener {
-        //    pickVideoLauncher.launch("video/*")
-            val filePath = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "two_encrypted-1.mp4").toUri()
-
-            try {
-                StreamingAeadConfig.register()
-
-                // Read the keyset into a KeysetHandle
-                var handle: KeysetHandle? = null
-                handle = KeysetHandle.generateNew(AES128_CTR_HMAC_SHA256_4KB)
-                setup(handle,filePath )
-            } catch (e: GeneralSecurityException) {
-                e.printStackTrace()
-            } catch (e: IOException) {
-                e.printStackTrace()
-            }
-        }
 
 
         // Setup video picker launcher
@@ -90,68 +49,108 @@ class MainActivity : AppCompatActivity() {
             registerForActivityResult(ActivityResultContracts.GetContent()) { videoUri ->
                 videoUri?.let {
 
-                    println("The uri path ${it.toString()}")
-                    println("The uri path ${it.path}")
-                    val uniqueName = getFileNameFromUri(it)
-                    println("the file unique name is $uniqueName")
+                    Log.e("Encode video file called ======", "TRUE")
+                    //encode my video file
+//                    val encodedVideo = Base64.encode(
+//                        contentResolver.openInputStream(it)?.let { videoUri ->
+//                            util.getFileBytes(
+//                                videoUri
+//                            )
+//                        }, NO_PADDING
+//                    )
+//                    Log.e("Encode video file successful ======", "TRUE")
+
+                    //  encryptionUtils.encryptFile("AAAAAAAAAAAAAAAA", encodedVideo)
+                    contentResolver.openInputStream(it)
+                        ?.let { it1 -> encryptionUtils.encryptVideo(it1, "AAAAAAAAAAAAAAAA") }
+
+
+                }
+            }
+        // Setup file picker launcher
+        pickTextFileLauncher =
+            registerForActivityResult(ActivityResultContracts.GetContent()) { fileUri ->
+                fileUri?.let {
+
+                    Log.e("file picker URI path is ======", "${it.path}")
+                    //  readFile(it)
+                    contentResolver.openInputStream(it)
+                        ?.let { it1 -> encryptionUtils.decryptVideo(it1, "AAAAAAAAAAAAAAAA") }
 
                 }
             }
 
 
+        // Setup SELECT VIDEO button
+        findViewById<Button>(R.id.button_select_video).setOnClickListener {
+            askForPermissions()
+            pickVideoLauncher.launch("video/*")
 
-//
-//        // Initialize MasterKey
-//        // Todo: Handle APILevel below 23
-//        val keyGenParameterSpec = MasterKeys.AES256_GCM_SPEC
-//        //val keyGenParameterSpec = MasterKeys.AES128_CTR_HMAC_SHA256_4KB
-//        val mainKeyAlias = MasterKeys.getOrCreate(keyGenParameterSpec)
-//        masterKey = MasterKey.Builder(applicationContext)
-//            .setKeyGenParameterSpec(keyGenParameterSpec)
-//            .build()
-//
-//        println("The master key is ======${masterKey}")
-//        // Setup video picker launcher
-//        pickVideoLauncher =
-//            registerForActivityResult(ActivityResultContracts.GetContent()) { videoUri ->
-//                videoUri?.let {
-//                    saveEncryptedVideo(it)
-////                    val encodedVideo = Base64.encodeToString(
-////                        Utils.getBytes(
-////                            contentResolver.openInputStream(it)
-////                        ), 0
-//                    // )
-//                }
-//            }
-//
-//        // Setup SELECT VIDEO button
-//        findViewById<Button>(R.id.button_select_video).setOnClickListener {
-//            pickVideoLauncher.launch("video/*")
-//        }
-//
-//        // Setup DECRYPT VIDEO button
-//        findViewById<Button>(R.id.button_decrypt_video).setOnClickListener {
-//            readFile()
-//        }
-//        videoView = findViewById(R.id.videoViewLyt)
-
-    }
-
-    @Throws(GeneralSecurityException::class, IOException::class)
-    fun setup(handle: KeysetHandle?,uri: Uri) {
-        println("setup method called ======")
-        // Get the primitive
-        var streamingAead: StreamingAead? = null
-        try {
-            streamingAead = StreamingAeadFactory.getPrimitive(handle)
-        } catch (ex: GeneralSecurityException) {
-            System.err.println("Cannot create primitive, got error: $ex")
-            System.exit(1)
         }
-        val associatedData = ByteArray(0)
-        streamingAead?.let { decryptVideo(it, associatedData,uri) }
+
+        findViewById<Button>(R.id.button_decrypt_video).setOnClickListener {
+            askForPermissions()
+            pickTextFileLauncher.launch("text/plain")
+
+//            val decryptedEncodedVideoString =
+//                encryptionUtils.decryptFile("AAAAAAAAAAAAAAAA", encryptedVideoString)
+
+
+        }
     }
 
+    private fun readFile(uri: Uri): String {
+        Log.e("readFile is called", "TRue")
+        var content = ""
+        try {
+            val readFileContent = contentResolver.openInputStream(uri)?.let {
+                util.getFileBytes(it)
+            }
+
+            content = readFileContent?.let { String(it) }.toString()
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+        Log.e("readFileContent size is ", "${content.length}")
+        encryptedVideoString = content
+        var decryptedEncodedVideoString =
+            encryptionUtils.decryptFile("AAAAAAAAAAAAAAAA", this.encryptedVideoString)
+        Log.e("Save decrypted, decoded video file locally", "Called!!!!")
+        util.saveFile(
+            "decryptedEncodedVideoFile.mp4",
+            Base64.decode(decryptedEncodedVideoString, 0)
+        )
+        return this.encryptedVideoString
+    }
+
+    private fun askForPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                startActivity(intent)
+                return
+            }
+            createDir()
+        }
+    }
+
+    private fun createDir() {
+        val decryptionDirectory = File(
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM),
+            FileUtil.DOCUMENT_DECRYPTION_DIRECTORY
+        )
+
+        val encryptionDirectory = File(
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM),
+            FileUtil.DOCUMENT_ENCRYPTION_DIRECTORY
+        )
+        if (!decryptionDirectory.exists()) {
+            decryptionDirectory.mkdirs()
+        }
+        if (!encryptionDirectory.exists()) {
+            encryptionDirectory.mkdirs()
+        }
+    }
 
     /**
      * Save video as encrypted file from [videoUri].
