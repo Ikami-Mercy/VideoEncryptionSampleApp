@@ -132,6 +132,9 @@ class MainActivity : AppCompatActivity() {
             }
             createDir()
         }
+        else{
+            createDir()
+        }
     }
 
     private fun createDir() {
