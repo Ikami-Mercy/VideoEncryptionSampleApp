@@ -18,6 +18,7 @@ import com.ikami.encryptionsample.utils.EncryptionUtil
 import com.ikami.encryptionsample.utils.FileUtil
 import java.io.File
 
+
 private val encryptionUtils = EncryptionUtil()
 private val deviceIdEncryptionUtils = DeviceIdEncryptionUtil()
 const val masterKey = Constants.MASTER_KEY
@@ -76,23 +77,21 @@ class DecryptionWorker(context: Context, workerParams: WorkerParameters) :
 
     private fun folderFilesDecryption(){
         Log.e("folderFilesDecryption", "called--->")
-        val directory = File(
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM),
-            FileUtil.DOCUMENT_ENCRYPTION_DIRECTORY
-        )
-        val files = directory.listFiles()
+        val videoFileDirectory = File(applicationContext.filesDir, "masterKeyEncryptedVideos")
+
+        val files = videoFileDirectory.listFiles()
         val fileSize = files.size
         Log.e("Encrypted Files", "Size: $fileSize")
         for (i in files.indices) {
             Log.e("Files", "FileName:" + files[i].name)
-            Log.e("Files", "FilePath:" + files[i].path)
             val fileUri = files[i].toUri()
             applicationContext.contentResolver.openInputStream(fileUri)
                 ?.let { it1 ->
                     encryptionUtils.decryptVideo(
                         it1,
                         masterKey,
-                        i
+                        i,
+                        applicationContext
                     )
                 }
         }
@@ -101,16 +100,12 @@ class DecryptionWorker(context: Context, workerParams: WorkerParameters) :
     private fun folderFilesEncryption(){
         Log.e("folderFilesEncryption", "called--->")
 
-        val directory = File(
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM),
-            FileUtil.DOCUMENT_DECRYPTION_DIRECTORY
-        )
-        val files = directory.listFiles()
+        val videoFileDirectory = File(applicationContext.filesDir, "masterKeyEncryptedVideos")
+        val files = videoFileDirectory.listFiles()
         val fileSize = files.size
         Log.e("Decrypted Files", "Size: $fileSize")
         for (i in files.indices) {
             Log.e("Files", "FileName:" + files[i].name)
-            Log.e("Files", "FilePath:" + files[i].path)
             val fileUri = files[i].toUri()
             applicationContext.contentResolver.openInputStream(fileUri)
                 ?.let { it1 ->

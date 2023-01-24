@@ -1,5 +1,6 @@
 package com.ikami.encryptionsample.utils
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.provider.Settings
 import android.util.Log
@@ -19,7 +20,6 @@ class DeviceIdEncryptionUtil {
         base64Video: InputStream,
         counter:Int
     ) {
-        println("encryptFile2222222 called ======")
         try {
             val secretKeySpec = SecretKeySpec(encryptionKey.toByteArray(), "AES")
             val cipher = Cipher.getInstance("AES")
@@ -41,6 +41,7 @@ class DeviceIdEncryptionUtil {
 
     }
 
+    @SuppressLint("HardwareIds")
     open fun getDeviceIMEI(ctx: Context): String {
         var deviceID = Settings.Secure.getString(
             ctx.contentResolver,
@@ -50,7 +51,7 @@ class DeviceIdEncryptionUtil {
             deviceID = deviceID.substring(0, 16)
         }
 
-        Log.i("deviceID", "${deviceID.substring(0, 5)}")
+        Log.i("deviceID", deviceID.substring(0, 5))
         return deviceID
     }
 

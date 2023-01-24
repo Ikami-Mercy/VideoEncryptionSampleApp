@@ -1,5 +1,6 @@
 package com.ikami.encryptionsample.utils
 
+import android.content.Context
 import android.os.Environment
 import android.util.Log
 import java.io.*
@@ -39,6 +40,28 @@ class FileUtil {
         }
     }
 
+    open fun saveFileInternally(context: Context, filename: String, content: ByteArray,directoryName: String){
+        Log.e(this::class.java.simpleName, "saveFileInternally called")
+        val videoFileDirectory = context.getDir(directoryName, Context.MODE_PRIVATE)
+
+        try {
+
+            val fileObject = File(videoFileDirectory, filename)
+            fileObject.createNewFile()
+
+
+            fileObject.createNewFile()
+            val fo = FileOutputStream(fileObject)
+            fo.write(content)
+            fo.close()
+            fileObject.absolutePath
+
+            Log.e(this::class.java.simpleName, "saveFileInternally successful")
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Log.e(this::class.java.simpleName, "saveFileInternally: $e")
+        }
+    }
 
     companion object {
 

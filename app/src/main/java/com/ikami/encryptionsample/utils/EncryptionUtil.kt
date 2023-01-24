@@ -1,5 +1,6 @@
 package com.ikami.encryptionsample.utils
 
+import android.content.Context
 import android.util.Log
 import java.io.IOException
 import java.io.InputStream
@@ -18,7 +19,7 @@ class EncryptionUtil {
     private val ALGORITHM = "AES"
 
 
-    open fun encryptVideo(inputStream: InputStream, key: String, videoFileCount: Int) {
+    open fun encryptVideo(inputStream: InputStream, key: String, videoFileCount: Int, context: Context) {
         val util = FileUtil()
         Log.e("encryptVideo is called ===>>", "")
 
@@ -47,7 +48,7 @@ class EncryptionUtil {
 
     }
 
-    fun decryptVideo(inputStream: InputStream, key: String, decryptedVideoFileCount: Int) {
+    fun decryptVideo(inputStream: InputStream, key: String, decryptedVideoFileCount: Int, context:Context) {
         val util = FileUtil()
         Log.e("decryptVideo is called ===>>", "")
         val secretKey = SecretKeySpec(key.toByteArray(), ALGORITHM)
@@ -59,7 +60,8 @@ class EncryptionUtil {
             inputStream.read(inputBytes)
             val outputBytes = cipher.doFinal(inputBytes)
 
-            util.saveFile("decryptedVideoFile$decryptedVideoFileCount.mp4", outputBytes)
+            //util.saveFile("decryptedVideoFile$decryptedVideoFileCount.mp4", outputBytes)
+            util.saveFileInternally(context,"decryptedVideoFile$decryptedVideoFileCount.mp4",outputBytes,"MasterKeyDecryptionVids")
             inputStream.close()
         } catch (ex: NoSuchPaddingException) {
             throw Exception("Error encrypting/decrypting file", ex)

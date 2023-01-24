@@ -54,8 +54,9 @@ class MainActivity : AppCompatActivity() {
 
                     contentResolver.openInputStream(it)
                         ?.let { it1 ->
-                            encryptionUtils.encryptVideo(it1, masterKey, videoFileCount)
+                            encryptionUtils.encryptVideo(it1, masterKey, videoFileCount, this)
                             videoFileCount++
+
                         }
 
 
@@ -73,7 +74,8 @@ class MainActivity : AppCompatActivity() {
                             encryptionUtils.decryptVideo(
                                 it1,
                                 masterKey,
-                                decryptedVideoFileCount
+                                decryptedVideoFileCount,
+                                this
                             )
                             decryptedVideoFileCount++
                         }
@@ -107,12 +109,7 @@ class MainActivity : AppCompatActivity() {
 
         }
         findViewById<Button>(R.id.button_lesson_view).setOnClickListener {
-            Log.e("ByteArray generated is", "->${Constants.IV.toByteArray()}")
 
-            val generatedIv= encryptionUtils.generateIV(Constants.IV.toByteArray())
-            Log.e("generatedIv is", "->${generatedIv}")
-            Log.e("tHE new generated IV: ", "->${encryptionUtils.generateIV(Constants.IV.toByteArray())}")
-            Log.e("generatedIv is equals to new generated IV: ", "->${generatedIv == encryptionUtils.generateIV(Constants.IV.toByteArray())}")
         }
 
     }
