@@ -1,103 +1,85 @@
 package com.ikami.encryptionsample.utils
 
-import android.util.Base64
 import android.util.Log
-import java.io.FileInputStream
-import java.io.FileOutputStream
+import java.io.IOException
 import java.io.InputStream
-import java.security.SecureRandom
-import java.util.Base64.getEncoder
-import java.util.Base64.getMimeEncoder
+import java.security.InvalidKeyException
+import java.security.NoSuchAlgorithmException
+import javax.crypto.BadPaddingException
 import javax.crypto.Cipher
-import javax.crypto.KeyGenerator
+import javax.crypto.IllegalBlockSizeException
+import javax.crypto.NoSuchPaddingException
+import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 class EncryptionUtil {
-
-    open fun encryptFile(encryptionKey: String, base64Video: ByteArray){
-        Log.e("encryptFile key is  ======", "$encryptionKey")
-        val util = FileUtil()
-         try {
-
-            val secretKeySpec = SecretKeySpec(encryptionKey.toByteArray(), "AES")
-            val cipher = Cipher.getInstance("AES")
-            cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec)
-            val cipherText = cipher.doFinal(base64Video)
-            var encryptedVideoString = Base64.encode(cipherText,Base64.NO_PADDING)
-            util.saveFile("encryptedBase64VideoFile.txt", encryptedVideoString, true)
-
-        } catch (e: java.security.NoSuchAlgorithmException) {
-            e.printStackTrace()
-        } catch (e: javax.crypto.NoSuchPaddingException) {
-            e.printStackTrace()
-        } catch (e: java.security.InvalidKeyException) {
-            e.printStackTrace()
-        } catch (e: javax.crypto.BadPaddingException) {
-            e.printStackTrace()
-        } catch (e: javax.crypto.IllegalBlockSizeException) {
-            e.printStackTrace()
-        }
-    }
-
-    open fun decryptFile(encryptionKey: String, encryptedBase64Video: String): String {
-
-        println("decryptFile called ======")
-        var decryptedVideoString = ""
-        try {
-
-            val secretKeySpec = SecretKeySpec(encryptionKey.toByteArray(), "AES")
-            val cipher = Cipher.getInstance("AES")
-            cipher.init(Cipher.DECRYPT_MODE, secretKeySpec)
-            val decodedValue = Base64.decode(encryptedBase64Video.toByteArray(), Base64.NO_PADDING)
-            val values = cipher.doFinal(decodedValue)
-             decryptedVideoString = String(values)
-
-        } catch (e: java.security.NoSuchAlgorithmException) {
-            e.printStackTrace()
-        } catch (e: javax.crypto.NoSuchPaddingException) {
-            e.printStackTrace()
-        } catch (e: java.security.InvalidKeyException) {
-            e.printStackTrace()
-        } catch (e: javax.crypto.BadPaddingException) {
-            e.printStackTrace()
-        } catch (e: javax.crypto.IllegalBlockSizeException) {
-            e.printStackTrace()
-        }
-        println("decryptedVideoString is = ${decryptedVideoString.toCharArray().size}")
-        return decryptedVideoString
-
-    }
+    private val TRANSFORMATION = "AES/GCM/NoPadding"
+    private val iv: GCMParameterSpec = generateIV(Constants.IV.toByteArray())
+    private val ALGORITHM = "AES"
 
 
-
-    open fun encryptVideo(inputStream: InputStream, key: String) {
+    open fun encryptVideo(inputStream: InputStream, key: String, videoFileCount: Int) {
         val util = FileUtil()
         Log.e("encryptVideo is called ===>>", "")
 
-        val secretKey = SecretKeySpec(key.toByteArray(), "AES")
-        val cipher = Cipher.getInstance("AES")
-        cipher.init(Cipher.ENCRYPT_MODE, secretKey)
-
-        val inputBytes = ByteArray(inputStream.available())
-        inputStream.read(inputBytes)
-        val outputBytes = cipher.doFinal(inputBytes)
-        util.saveFile("encryptedVideoFile.txt",outputBytes, true)
-        inputStream.close()
+        val secretKey = SecretKeySpec(key.toByteArray(), ALGORITHM)
+        try {
+            val cipher = Cipher.getInstance(TRANSFORMATION)
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey, iv)
+            val inputBytes = ByteArray(inputStream.available())
+            inputStream.read(inputBytes)
+            val outputBytes = cipher.doFinal(inputBytes)
+            util.saveFile("encryptedVideoFile$videoFileCount.txt", outputBytes, true)
+            inputStream.close()
+        } catch (ex: NoSuchPaddingException) {
+            throw Exception("Error encrypting/decrypting file", ex)
+        } catch (ex: NoSuchAlgorithmException) {
+            throw Exception("Error encrypting/decrypting file", ex)
+        } catch (ex: InvalidKeyException) {
+            throw Exception("Error encrypting/decrypting file", ex)
+        } catch (ex: BadPaddingException) {
+            throw Exception("Error encrypting/decrypting file", ex)
+        } catch (ex: IllegalBlockSizeException) {
+            throw Exception("Error encrypting/decrypting file", ex)
+        } catch (ex: IOException) {
+            throw Exception("Error encrypting/decrypting file", ex)
+        }
 
     }
 
-    fun decryptVideo(inputStream: InputStream, key: String) {
+    fun decryptVideo(inputStream: InputStream, key: String, decryptedVideoFileCount: Int) {
         val util = FileUtil()
         Log.e("decryptVideo is called ===>>", "")
-        val secretKey = SecretKeySpec(key.toByteArray(), "AES")
-        val cipher = Cipher.getInstance("AES")
-        cipher.init(Cipher.DECRYPT_MODE, secretKey)
+        val secretKey = SecretKeySpec(key.toByteArray(), ALGORITHM)
+        try {
+            val cipher = Cipher.getInstance(TRANSFORMATION)
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, iv)
 
-        val inputBytes = ByteArray(inputStream.available())
-        inputStream.read(inputBytes)
-        val outputBytes = cipher.doFinal(inputBytes)
+            val inputBytes = ByteArray(inputStream.available())
+            inputStream.read(inputBytes)
+            val outputBytes = cipher.doFinal(inputBytes)
 
-        util.saveFile("decryptedVideoFile.mp4",outputBytes)
-        inputStream.close()
+            util.saveFile("decryptedVideoFile$decryptedVideoFileCount.mp4", outputBytes)
+            inputStream.close()
+        } catch (ex: NoSuchPaddingException) {
+            throw Exception("Error encrypting/decrypting file", ex)
+        } catch (ex: NoSuchAlgorithmException) {
+            throw Exception("Error encrypting/decrypting file", ex)
+        } catch (ex: InvalidKeyException) {
+            throw Exception("Error encrypting/decrypting file", ex)
+        } catch (ex: BadPaddingException) {
+            throw Exception("Error encrypting/decrypting file", ex)
+        } catch (ex: IllegalBlockSizeException) {
+            throw Exception("Error encrypting/decrypting file", ex)
+        } catch (ex: IOException) {
+            throw Exception("Error encrypting/decrypting file", ex)
+        }
     }
+
+    fun generateIV(ivByte: ByteArray): GCMParameterSpec {
+        return GCMParameterSpec(128, ivByte)
+    }
+
+
+
 }

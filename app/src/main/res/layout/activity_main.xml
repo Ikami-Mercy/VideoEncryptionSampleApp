@@ -4,6 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:gravity="center"
+    android:padding="12dp"
     tools:context=".MainActivityBackup">
 
     <Button
@@ -18,9 +20,16 @@
         android:layout_height="wrap_content"
         android:text="Decrypt Video" />
 
-    <VideoView
-        android:id="@+id/videoViewLyt"
+    <Button
+        android:id="@+id/button_decrypt_multi_video"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="wrap_content"
+        android:text="Decrypt Multiple Videos" />
+
+    <Button
+        android:id="@+id/button_lesson_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Go to LESSON VIEW" />
 
 </androidx.appcompat.widget.LinearLayoutCompat>
