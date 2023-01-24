@@ -6,8 +6,8 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.ContentValues.TAG
 import android.content.Context
+import android.net.Uri
 import android.os.Build
-import android.os.Environment
 import android.util.Log
 import androidx.core.net.toUri
 import androidx.work.Worker
@@ -15,8 +15,8 @@ import androidx.work.WorkerParameters
 import com.ikami.encryptionsample.utils.Constants
 import com.ikami.encryptionsample.utils.DeviceIdEncryptionUtil
 import com.ikami.encryptionsample.utils.EncryptionUtil
-import com.ikami.encryptionsample.utils.FileUtil
 import java.io.File
+import java.io.IOException
 
 
 private val encryptionUtils = EncryptionUtil()
@@ -75,47 +75,54 @@ class DecryptionWorker(context: Context, workerParams: WorkerParameters) :
         manager.cancelAll()
     }
 
-    private fun folderFilesDecryption(){
+    private fun folderFilesDecryption() {
         Log.e("folderFilesDecryption", "called--->")
-        val videoFileDirectory = File(applicationContext.filesDir, "masterKeyEncryptedVideos")
 
-        val files = videoFileDirectory.listFiles()
-        val fileSize = files.size
-        Log.e("Encrypted Files", "Size: $fileSize")
-        for (i in files.indices) {
-            Log.e("Files", "FileName:" + files[i].name)
-            val fileUri = files[i].toUri()
-            applicationContext.contentResolver.openInputStream(fileUri)
-                ?.let { it1 ->
-                    encryptionUtils.decryptVideo(
-                        it1,
-                        masterKey,
-                        i,
-                        applicationContext
-                    )
-                }
+        val videoFileDirectory = applicationContext.assets.list("EncryptedVideos")
+        Log.e("assets folder size is", "--->${videoFileDirectory?.size}")
+
+        if (videoFileDirectory != null) {
+            for (i in videoFileDirectory.indices) {
+                Log.e("Files", "FileName:" + "${videoFileDirectory[i]}")
+                val uri = applicationContext.assets.open("${videoFileDirectory[i]}");
+                Log.e("assets URI is", "--->${uri}")
+               // applicationContext.contentResolver.openInputStream(fileUri)
+                uri .let { it1 ->
+                        encryptionUtils.decryptVideo(
+                            it1,
+                            masterKey,
+                            i,
+                            applicationContext
+                        )
+                    }
+            }
         }
     }
 
-    private fun folderFilesEncryption(){
+    private fun folderFilesEncryption() {
         Log.e("folderFilesEncryption", "called--->")
 
-        val videoFileDirectory = File(applicationContext.filesDir, "masterKeyEncryptedVideos")
+        val videoFileDirectory = applicationContext.getDir("MasterKeyDecryptionVids", Context.MODE_PRIVATE)
+
+        if (!videoFileDirectory.exists()) {
+            videoFileDirectory.mkdirs()
+        }
         val files = videoFileDirectory.listFiles()
         val fileSize = files.size
         Log.e("Decrypted Files", "Size: $fileSize")
-        for (i in files.indices) {
-            Log.e("Files", "FileName:" + files[i].name)
-            val fileUri = files[i].toUri()
-            applicationContext.contentResolver.openInputStream(fileUri)
-                ?.let { it1 ->
-                    deviceIdEncryptionUtils.encryptFile(
-                      applicationContext,
-                        deviceIdEncryptionUtils.getDeviceIMEI(applicationContext),
-                        it1,
-                        i
-                    )
-                }
-        }
+            for (i in files.indices) {
+                Log.e("Files", "FileName:" + files[i].name)
+                val fileUri = files[i].toUri()
+                applicationContext.contentResolver.openInputStream(fileUri)
+                    ?.let { it1 ->
+                        deviceIdEncryptionUtils.encryptFile(
+                            applicationContext,
+                            deviceIdEncryptionUtils.getDeviceIMEI(applicationContext),
+                            it1,
+                            i
+                        )
+                    }
+            }
+
     }
 }

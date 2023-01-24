@@ -43,7 +43,9 @@ class FileUtil {
     open fun saveFileInternally(context: Context, filename: String, content: ByteArray,directoryName: String){
         Log.e(this::class.java.simpleName, "saveFileInternally called")
         val videoFileDirectory = context.getDir(directoryName, Context.MODE_PRIVATE)
-
+        if (!videoFileDirectory.exists()) {
+            videoFileDirectory.mkdirs()
+        }
         try {
 
             val fileObject = File(videoFileDirectory, filename)

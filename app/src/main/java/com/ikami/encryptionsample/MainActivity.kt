@@ -98,7 +98,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<Button>(R.id.button_decrypt_multi_video).setOnClickListener {
-            askForPermissions()
+            //askForPermissions()
             // Create a Work Request
             val uploadWorkRequest: WorkRequest = OneTimeWorkRequestBuilder<DecryptionWorker>().build()
             WorkManager.getInstance().enqueue(uploadWorkRequest)
