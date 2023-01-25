@@ -180,21 +180,4 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    @SuppressLint("Range")
-    private fun getFileNameFromUri(uri: Uri): String {
-        // return File(uri.path).name
-
-        var result = ""
-        if (uri.scheme.equals("content")) {
-            val cursor: Cursor? = contentResolver.query(uri, null, null, null, null)
-            cursor.use { it ->
-                if (it != null && it.moveToFirst()) {
-                    result = it.getString(it.getColumnIndex(OpenableColumns.DISPLAY_NAME))
-                }
-            }
-        }
-        return result
-
-    }
-
 }
