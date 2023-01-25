@@ -1,5 +1,9 @@
 package com.ikami.encryptionsample.viewmodels
 
-class FileDecryptionViewModel {
+import androidx.lifecycle.ViewModel
+
+class FileDecryptionViewModel: ViewModel() {
+
+
 
 }

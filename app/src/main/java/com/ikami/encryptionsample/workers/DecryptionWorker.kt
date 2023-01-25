@@ -6,7 +6,6 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.ContentValues.TAG
 import android.content.Context
-import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.core.net.toUri
@@ -15,8 +14,6 @@ import androidx.work.WorkerParameters
 import com.ikami.encryptionsample.utils.Constants
 import com.ikami.encryptionsample.utils.DeviceIdEncryptionUtil
 import com.ikami.encryptionsample.utils.EncryptionUtil
-import java.io.File
-import java.io.IOException
 
 
 private val encryptionUtils = EncryptionUtil()

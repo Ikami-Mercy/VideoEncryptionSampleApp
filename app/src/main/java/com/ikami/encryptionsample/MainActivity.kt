@@ -15,9 +15,14 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.LinearLayoutCompat
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkRequest
+import com.google.android.material.snackbar.Snackbar
 import com.ikami.encryptionsample.utils.Constants
 import com.ikami.encryptionsample.utils.EncryptionUtil
 import com.ikami.encryptionsample.utils.FileUtil
@@ -28,10 +33,12 @@ import java.io.File
 class MainActivity : AppCompatActivity() {
     private lateinit var pickVideoLauncher: ActivityResultLauncher<String>
     private lateinit var pickTextFileLauncher: ActivityResultLauncher<String>
+    private lateinit var uploadWorkRequest: WorkRequest
     private val encryptionUtils = EncryptionUtil()
     private val masterKey = Constants.MASTER_KEY
     private var videoFileCount: Int = 1
     private var decryptedVideoFileCount: Int = 0
+    var decryptionStateLiveData: MutableLiveData<Boolean> = MutableLiveData()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -43,7 +50,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun initializeUI() {
         println("initializeUI called ======")
-
 
         // Setup video picker launcher
         pickVideoLauncher =
@@ -98,14 +104,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<Button>(R.id.button_decrypt_multi_video).setOnClickListener {
-            //askForPermissions()
             // Create a Work Request
-            val uploadWorkRequest: WorkRequest = OneTimeWorkRequestBuilder<DecryptionWorker>().build()
+            uploadWorkRequest = OneTimeWorkRequestBuilder<DecryptionWorker>().build()
             WorkManager.getInstance().enqueue(uploadWorkRequest)
-            val workInfo = WorkManager.getInstance().getWorkInfoById(uploadWorkRequest.id).get()
-            val wasSuccess = workInfo.outputData.getBoolean("is_success", false)
-            if(wasSuccess)
-            Toast.makeText(this, "Decryption successful:-> $wasSuccess", Toast.LENGTH_LONG).show()
+            observeWorkManager()
+            observeDecryptionState()
 
         }
         findViewById<Button>(R.id.button_lesson_view).setOnClickListener {
@@ -114,6 +117,34 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    private fun observeWorkManager() {
+        WorkManager.getInstance()
+            .getWorkInfoByIdLiveData(uploadWorkRequest.id).observe(this, Observer { workInfo ->
+                decryptionStateLiveData.value = if (workInfo != null && workInfo.state == WorkInfo.State.SUCCEEDED) {
+                    workInfo.outputData.getBoolean("is_success", false)
+                } else {
+                    false
+                }
+
+            })
+    }
+
+    private fun observeDecryptionState() {
+        val launcherLayout= findViewById<LinearLayoutCompat>(R.id.launcher_layout)
+        decryptionStateLiveData.observe(this, Observer {
+            if (it == true) {
+                Toast.makeText(this, "DECRYPTION IS SUCCESSFUL: ${decryptionStateLiveData.value}", Toast.LENGTH_LONG).show()
+                Snackbar.make(
+                    this, launcherLayout, "DECRYPTION IS SUCCESSFUL",
+                    Snackbar.LENGTH_SHORT
+                ).show()
+
+            }
+            else{
+
+            }
+        })
+    }
 
     private fun askForPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {

@@ -3,19 +3,25 @@ package com.ikami.encryptionsample.utils
 import android.content.Context
 import android.os.Environment
 import android.util.Log
-import java.io.*
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 
 
 class FileUtil {
 
 
-    open fun saveFile(filename: String?, content: ByteArray?, isEncryption: Boolean = false): String? {
+    open fun saveFile(
+        filename: String?,
+        content: ByteArray?,
+        isEncryption: Boolean = false
+    ): String? {
 
         Log.e("Save file is called!!!!! ======", "TRUE")
 
-        var storageDirectory = if(isEncryption){
+        var storageDirectory = if (isEncryption) {
             DOCUMENT_ENCRYPTION_DIRECTORY
-        } else{
+        } else {
             DOCUMENT_DECRYPTION_DIRECTORY
 
         }
@@ -40,7 +46,12 @@ class FileUtil {
         }
     }
 
-    open fun saveFileInternally(context: Context, filename: String, content: ByteArray,directoryName: String){
+    open fun saveFileInternally(
+        context: Context,
+        filename: String,
+        content: ByteArray,
+        directoryName: String
+    ) {
         Log.e(this::class.java.simpleName, "saveFileInternally called")
         val videoFileDirectory = context.getDir(directoryName, Context.MODE_PRIVATE)
         if (!videoFileDirectory.exists()) {
