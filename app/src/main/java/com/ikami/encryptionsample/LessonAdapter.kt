@@ -8,18 +8,19 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.ikami.encryptionsample.databinding.VideoItemBinding
 
-class LessonAdapter (private val onLessonItemClicked: (position: Int) -> Unit):
+class LessonAdapter (private val onLessonItemClicked: (position: Int, lessonItem: LessonUIModel) -> Unit):
     ListAdapter<LessonUIModel, LessonAdapter.LessonViewHolder>(LessonDiffCallback()) {
 
     inner class LessonViewHolder (private val binding: VideoItemBinding): RecyclerView.ViewHolder(binding.root) {
         fun bind(
-            clickListener: (position: Int) -> Unit,
+            clickListener: (position: Int, lessonItem: LessonUIModel) -> Unit,
             lessonName: String,
-            itemPosition: Int
+            itemPosition: Int,
+            item: LessonUIModel
         ) {
             binding.lessonName.text = lessonName
             binding.root.setOnClickListener {
-                clickListener.invoke(itemPosition)
+                clickListener.invoke(itemPosition, item)
             }
         }
     }
@@ -33,7 +34,7 @@ class LessonAdapter (private val onLessonItemClicked: (position: Int) -> Unit):
     override fun onBindViewHolder(holder: LessonViewHolder, position: Int) {
         val item = getItem(position)
         Log.e(this::class.java.simpleName, "lesson name: ${item.lessonName}")
-        holder.bind(onLessonItemClicked, item.lessonName, position)
+        holder.bind(onLessonItemClicked, item.lessonName, position, item)
     }
 }
 

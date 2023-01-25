@@ -23,11 +23,19 @@
         android:theme="@style/Theme.EncryptionSample"
         tools:targetApi="31">
         <activity
+            android:name=".VideoPlayerActivity"
+            android:exported="false"
+            android:label="@string/title_activity_video_player"
+            android:theme="@style/Theme.EncryptionSample.NoActionBar">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
             android:name=".LessonViewActivity"
             android:exported="false"
             android:label="@string/title_activity_lesson_view"
-            android:theme="@style/Theme.EncryptionSample.NoActionBar">
-        </activity>
+            android:theme="@style/Theme.EncryptionSample.NoActionBar"></activity>
         <activity
             android:name=".MainActivity"
             android:exported="true">

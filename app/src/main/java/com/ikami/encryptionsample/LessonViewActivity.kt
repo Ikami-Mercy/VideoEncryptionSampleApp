@@ -1,10 +1,15 @@
 package com.ikami.encryptionsample
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.ikami.encryptionsample.databinding.ActivityLessonViewBinding
+import java.io.File
+import java.io.IOException
+
 
 class LessonViewActivity : AppCompatActivity() {
 
@@ -23,33 +28,52 @@ class LessonViewActivity : AppCompatActivity() {
     }
 
     private fun getEncryptedVideos() {
+
         try {
-            val mainPathName = "EncryptedVideos"
-            val file = assets.list(mainPathName)
-            if (file == null) {
-                Log.e(this::class.java.simpleName, "No file found")
+            val videoFileDirectory = getDir("uLessonEncryptedVideos", Context.MODE_PRIVATE)
+            val files = videoFileDirectory.listFiles()
+            if (files.isNullOrEmpty()){
+                Toast.makeText(this, "No encrypted file found", Toast.LENGTH_SHORT).show()
             } else {
-                Log.e(this::class.java.simpleName, "number of files: ${file.size}")
-                if (file.isNotEmpty()){
-                    val lessons = mutableListOf<LessonUIModel>()
-                    file.forEach {
-                        val filePath = "$mainPathName/$it"
-                        Log.e(this::class.java.simpleName, "filename: $mainPathName/$it")
-                        val lessonUIModel = LessonUIModel(it, filePath)
-                        lessons.add(lessonUIModel)
-                    }
+                val lessons = mutableListOf<LessonUIModel>()
 
-                    adapter = LessonAdapter {
-                        Toast.makeText(this, "item position: $it", Toast.LENGTH_SHORT).show()
-                    }
-
-                    binding.container.lessonsRv.adapter = adapter
-                    adapter.submitList(lessons)
+                for (i in files.indices){
+                    Log.e("Files", "FileName:" + files[i].name)
+                    Log.e("Files", "FilePath:" + files[i].path)
+                    val fileName = files[i].name
+                    val filePath = files[i].path
+                    val lessonUIModel = LessonUIModel(fileName, filePath)
+                    lessons.add(lessonUIModel)
                 }
 
+                adapter = LessonAdapter{ position, lessonItem ->
+                    val intent = Intent(this, VideoPlayerActivity::class.java)
+
+                    intent.putExtra(FILE_PATH, lessonItem.filePath)
+                    startActivity(intent)
+                }
+
+                binding.container.lessonsRv.adapter = adapter
+                adapter.submitList(lessons)
             }
-        } catch (e: Exception) {
+        } catch (e: Exception){
             e.printStackTrace()
         }
     }
+
+    @Throws(IOException::class)
+    fun getFileFromAssets(context: Context, filePath: String, fileName: String): File = File(context.cacheDir, fileName)
+        .also {
+            if (!it.exists()) {
+                Log.e(this::class.java.simpleName, "file don't exists")
+                it.outputStream().use { cache ->
+                    Log.e(this::class.java.simpleName, "filename: $fileName")
+                    context.assets.open(filePath).use { inputStream ->
+                        inputStream.copyTo(cache)
+                    }
+                }
+            } else {
+                Log.e(this::class.java.simpleName, "file exists")
+            }
+        }
 }

@@ -105,7 +105,7 @@ class MainActivity : AppCompatActivity() {
             WorkManager.getInstance().enqueue(uploadWorkRequest)
             val workInfo = WorkManager.getInstance().getWorkInfoById(uploadWorkRequest.id).get()
             val wasSuccess = workInfo.outputData.getBoolean("is_success", false)
-            Toast.makeText(this, "Decryption successful:-> $wasSuccess", Toast.LENGTH_LONG).show()
+            //Toast.makeText(this, "Decryption successful:-> $wasSuccess", Toast.LENGTH_LONG).show()
 
         }
         findViewById<Button>(R.id.button_lesson_view).setOnClickListener {
