@@ -7,7 +7,7 @@
     android:orientation="vertical"
     android:gravity="center"
     android:padding="12dp"
-    tools:context=".MainActivity">
+    tools:context=".views.MainActivity">
 
     <Button
         android:id="@+id/button_select_video"

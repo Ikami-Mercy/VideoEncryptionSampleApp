@@ -13,6 +13,7 @@ import androidx.work.Worker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.ikami.encryptionsample.utils.Constants
+import com.ikami.encryptionsample.utils.Constants.ASSET_VIDEO_DIRECTORY
 import com.ikami.encryptionsample.utils.DeviceIdEncryptionUtil
 import com.ikami.encryptionsample.utils.EncryptionUtil
 
@@ -77,23 +78,19 @@ class DecryptionWorker(context: Context, workerParams: WorkerParameters) :
     private fun folderFilesDecryption() {
         Log.e("folderFilesDecryption", "called--->")
 
-        val videoFileDirectory = applicationContext.assets.list("EncryptedVideos")
-        Log.e("assets folder size is", "--->${videoFileDirectory?.size}")
+        val videoFileDirectory = fetchVideosFromAssets(applicationContext)
 
-        if (videoFileDirectory != null) {
-            for (i in videoFileDirectory.indices) {
-                Log.e("Files", "FileName:" + "${videoFileDirectory[i]}")
-                val uri = applicationContext.assets.open("${videoFileDirectory[i]}");
-                Log.e("assets URI is", "--->${uri}")
-                uri .let { it1 ->
-                        encryptionUtils.decryptVideo(
-                            it1,
-                            masterKey,
-                            i,
-                            applicationContext
-                        )
-                    }
-            }
+        for (i in videoFileDirectory.indices) {
+            Log.e("Files", "FilePath:" + videoFileDirectory[i])
+            val uri = applicationContext.assets.open(videoFileDirectory[i])
+            uri .let { it1 ->
+                    encryptionUtils.decryptVideo(
+                        it1,
+                        masterKey,
+                        i,
+                        applicationContext
+                    )
+                }
         }
     }
 
@@ -122,5 +119,23 @@ class DecryptionWorker(context: Context, workerParams: WorkerParameters) :
                     }
             }
 
+    }
+
+
+    private fun fetchVideosFromAssets(context: Context): ArrayList<String> {
+        return getListOfFilesFromAsset(ASSET_VIDEO_DIRECTORY, context)
+    }
+    private fun getListOfFilesFromAsset(path: String, context: Context): ArrayList<String> {
+        val listOfAudioFiles = ArrayList<String>()
+        context.assets.list(path)?.forEach { file ->
+            val innerFiles = getListOfFilesFromAsset("$path/$file", context)
+            if (innerFiles.isNotEmpty()) {
+                listOfAudioFiles.addAll(innerFiles)
+            } else {
+                // it can be an empty folder or file you don't like, you can check it here
+                listOfAudioFiles.add("$path/$file")
+            }
+        }
+        return listOfAudioFiles
     }
 }

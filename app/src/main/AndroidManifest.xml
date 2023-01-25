@@ -23,7 +23,7 @@
         android:theme="@style/Theme.EncryptionSample"
         tools:targetApi="31">
         <activity
-            android:name=".VideoPlayerActivity"
+            android:name=".views.VideoPlayerActivity"
             android:exported="false"
             android:label="@string/title_activity_video_player"
             android:theme="@style/Theme.EncryptionSample.NoActionBar">
@@ -32,12 +32,12 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".LessonViewActivity"
+            android:name=".views.LessonViewActivity"
             android:exported="false"
             android:label="@string/title_activity_lesson_view"
             android:theme="@style/Theme.EncryptionSample.NoActionBar"></activity>
         <activity
-            android:name=".MainActivity"
+            android:name=".views.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
