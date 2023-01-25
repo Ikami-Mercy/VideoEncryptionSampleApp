@@ -11,7 +11,6 @@ import android.provider.OpenableColumns
 import android.provider.Settings
 import android.util.Log
 import android.widget.Button
-import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -26,6 +25,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.ikami.encryptionsample.utils.Constants
 import com.ikami.encryptionsample.utils.EncryptionUtil
 import com.ikami.encryptionsample.utils.FileUtil
+import com.ikami.encryptionsample.utils.ProgressDialog
 import com.ikami.encryptionsample.workers.DecryptionWorker
 import java.io.File
 
@@ -39,6 +39,7 @@ class MainActivity : AppCompatActivity() {
     private var videoFileCount: Int = 1
     private var decryptedVideoFileCount: Int = 0
     var decryptionStateLiveData: MutableLiveData<Boolean> = MutableLiveData()
+    private val progressDialog = ProgressDialog()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -104,6 +105,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<Button>(R.id.button_decrypt_multi_video).setOnClickListener {
+
+            progressDialog.show(this)
             // Create a Work Request
             uploadWorkRequest = OneTimeWorkRequestBuilder<DecryptionWorker>().build()
             WorkManager.getInstance().enqueue(uploadWorkRequest)
@@ -120,28 +123,28 @@ class MainActivity : AppCompatActivity() {
     private fun observeWorkManager() {
         WorkManager.getInstance()
             .getWorkInfoByIdLiveData(uploadWorkRequest.id).observe(this, Observer { workInfo ->
-                decryptionStateLiveData.value = if (workInfo != null && workInfo.state == WorkInfo.State.SUCCEEDED) {
-                    workInfo.outputData.getBoolean("is_success", false)
-                } else {
-                    false
-                }
+                decryptionStateLiveData.value =
+                    if (workInfo != null && workInfo.state == WorkInfo.State.SUCCEEDED) {
+                        workInfo.outputData.getBoolean("is_success", false)
+                    } else {
+                        false
+                    }
 
             })
     }
 
     private fun observeDecryptionState() {
-        val launcherLayout= findViewById<LinearLayoutCompat>(R.id.launcher_layout)
+        val launcherLayout = findViewById<LinearLayoutCompat>(R.id.launcher_layout)
         decryptionStateLiveData.observe(this, Observer {
             if (it == true) {
-                Toast.makeText(this, "DECRYPTION IS SUCCESSFUL: ${decryptionStateLiveData.value}", Toast.LENGTH_LONG).show()
+                progressDialog.dismiss()
                 Snackbar.make(
                     this, launcherLayout, "DECRYPTION IS SUCCESSFUL",
-                    Snackbar.LENGTH_SHORT
+                    Snackbar.LENGTH_LONG
                 ).show()
 
-            }
-            else{
-
+            } else {
+                Log.e("observeDecryptionState is ======", "$it")
             }
         })
     }
