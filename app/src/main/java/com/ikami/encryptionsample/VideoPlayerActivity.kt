@@ -3,6 +3,7 @@ package com.ikami.encryptionsample
 import android.content.Context
 import android.net.Uri
 import android.os.Bundle
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.SimpleExoPlayer
@@ -30,8 +31,12 @@ class VideoPlayerActivity : AppCompatActivity() {
 
         binding = ActivityVideoPlayerBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         setSupportActionBar(binding.toolbar)
+        onBackPressedDispatcher.addCallback(this, object: OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                finish()
+            }
+        })
         playVideo()
     }
 
@@ -100,5 +105,12 @@ class VideoPlayerActivity : AppCompatActivity() {
         }
 
         binding.playerContainer.videoPlayer.player = exoPlayer
+    }
+
+    override fun onStop() {
+        binding.playerContainer.videoPlayer.player = null
+        exoPlayer?.release()
+        exoPlayer = null
+        super.onStop()
     }
 }
