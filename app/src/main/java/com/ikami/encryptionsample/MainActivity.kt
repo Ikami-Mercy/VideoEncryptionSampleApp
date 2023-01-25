@@ -41,6 +41,7 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+    @SuppressLint("SuspiciousIndentation")
     private fun initializeUI() {
         println("initializeUI called ======")
 
@@ -104,12 +105,11 @@ class MainActivity : AppCompatActivity() {
             WorkManager.getInstance().enqueue(uploadWorkRequest)
             val workInfo = WorkManager.getInstance().getWorkInfoById(uploadWorkRequest.id).get()
             val wasSuccess = workInfo.outputData.getBoolean("is_success", false)
-            if(wasSuccess)
             Toast.makeText(this, "Decryption successful:-> $wasSuccess", Toast.LENGTH_LONG).show()
 
         }
         findViewById<Button>(R.id.button_lesson_view).setOnClickListener {
-
+            startActivity(Intent(this, LessonViewActivity::class.java))
         }
 
     }
