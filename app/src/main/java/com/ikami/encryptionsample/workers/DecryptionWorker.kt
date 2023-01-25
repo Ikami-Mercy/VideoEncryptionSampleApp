@@ -6,17 +6,15 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.ContentValues.TAG
 import android.content.Context
-import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.core.net.toUri
 import androidx.work.Worker
 import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import com.ikami.encryptionsample.utils.Constants
 import com.ikami.encryptionsample.utils.DeviceIdEncryptionUtil
 import com.ikami.encryptionsample.utils.EncryptionUtil
-import java.io.File
-import java.io.IOException
 
 
 private val encryptionUtils = EncryptionUtil()
@@ -38,7 +36,8 @@ class DecryptionWorker(context: Context, workerParams: WorkerParameters) :
         folderFilesDecryption()
         folderFilesEncryption()
         cancelNotification()
-        return Result.success()
+        val outputData = workDataOf("is_success" to true)
+        return Result.success(outputData)
 
     }
 
@@ -86,7 +85,6 @@ class DecryptionWorker(context: Context, workerParams: WorkerParameters) :
                 Log.e("Files", "FileName:" + "${videoFileDirectory[i]}")
                 val uri = applicationContext.assets.open("${videoFileDirectory[i]}");
                 Log.e("assets URI is", "--->${uri}")
-               // applicationContext.contentResolver.openInputStream(fileUri)
                 uri .let { it1 ->
                         encryptionUtils.decryptVideo(
                             it1,

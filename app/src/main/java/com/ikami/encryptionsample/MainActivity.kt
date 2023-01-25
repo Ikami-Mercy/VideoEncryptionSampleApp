@@ -11,16 +11,21 @@ import android.provider.OpenableColumns
 import android.provider.Settings
 import android.util.Log
 import android.widget.Button
-import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.LinearLayoutCompat
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkRequest
+import com.google.android.material.snackbar.Snackbar
 import com.ikami.encryptionsample.utils.Constants
 import com.ikami.encryptionsample.utils.EncryptionUtil
 import com.ikami.encryptionsample.utils.FileUtil
+import com.ikami.encryptionsample.utils.ProgressDialog
 import com.ikami.encryptionsample.workers.DecryptionWorker
 import java.io.File
 
@@ -28,10 +33,13 @@ import java.io.File
 class MainActivity : AppCompatActivity() {
     private lateinit var pickVideoLauncher: ActivityResultLauncher<String>
     private lateinit var pickTextFileLauncher: ActivityResultLauncher<String>
+    private lateinit var uploadWorkRequest: WorkRequest
     private val encryptionUtils = EncryptionUtil()
     private val masterKey = Constants.MASTER_KEY
     private var videoFileCount: Int = 1
     private var decryptedVideoFileCount: Int = 0
+    var decryptionStateLiveData: MutableLiveData<Boolean> = MutableLiveData()
+    private val progressDialog = ProgressDialog()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -41,10 +49,8 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    @SuppressLint("SuspiciousIndentation")
     private fun initializeUI() {
         println("initializeUI called ======")
-
 
         // Setup video picker launcher
         pickVideoLauncher =
@@ -99,13 +105,13 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<Button>(R.id.button_decrypt_multi_video).setOnClickListener {
-            //askForPermissions()
+
+            progressDialog.show(this)
             // Create a Work Request
-            val uploadWorkRequest: WorkRequest = OneTimeWorkRequestBuilder<DecryptionWorker>().build()
+            uploadWorkRequest = OneTimeWorkRequestBuilder<DecryptionWorker>().build()
             WorkManager.getInstance().enqueue(uploadWorkRequest)
-            val workInfo = WorkManager.getInstance().getWorkInfoById(uploadWorkRequest.id).get()
-            val wasSuccess = workInfo.outputData.getBoolean("is_success", false)
-            //Toast.makeText(this, "Decryption successful:-> $wasSuccess", Toast.LENGTH_LONG).show()
+            observeWorkManager()
+            observeDecryptionState()
 
         }
         findViewById<Button>(R.id.button_lesson_view).setOnClickListener {
@@ -114,6 +120,34 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    private fun observeWorkManager() {
+        WorkManager.getInstance()
+            .getWorkInfoByIdLiveData(uploadWorkRequest.id).observe(this, Observer { workInfo ->
+                decryptionStateLiveData.value =
+                    if (workInfo != null && workInfo.state == WorkInfo.State.SUCCEEDED) {
+                        workInfo.outputData.getBoolean("is_success", false)
+                    } else {
+                        false
+                    }
+
+            })
+    }
+
+    private fun observeDecryptionState() {
+        val launcherLayout = findViewById<LinearLayoutCompat>(R.id.launcher_layout)
+        decryptionStateLiveData.observe(this, Observer {
+            if (it == true) {
+                progressDialog.dismiss()
+                Snackbar.make(
+                    this, launcherLayout, "DECRYPTION IS SUCCESSFUL",
+                    Snackbar.LENGTH_LONG
+                ).show()
+
+            } else {
+                Log.e("observeDecryptionState is ======", "$it")
+            }
+        })
+    }
 
     private fun askForPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -144,23 +178,6 @@ class MainActivity : AppCompatActivity() {
         if (!encryptionDirectory.exists()) {
             encryptionDirectory.mkdirs()
         }
-    }
-
-    @SuppressLint("Range")
-    private fun getFileNameFromUri(uri: Uri): String {
-        // return File(uri.path).name
-
-        var result = ""
-        if (uri.scheme.equals("content")) {
-            val cursor: Cursor? = contentResolver.query(uri, null, null, null, null)
-            cursor.use { it ->
-                if (it != null && it.moveToFirst()) {
-                    result = it.getString(it.getColumnIndex(OpenableColumns.DISPLAY_NAME))
-                }
-            }
-        }
-        return result
-
     }
 
 }

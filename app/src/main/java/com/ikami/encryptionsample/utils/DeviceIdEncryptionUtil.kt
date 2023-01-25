@@ -18,7 +18,7 @@ class DeviceIdEncryptionUtil {
         context: Context,
         encryptionKey: String,
         base64Video: InputStream,
-        counter:Int
+        counter: Int
     ) {
         try {
             val secretKeySpec = SecretKeySpec(encryptionKey.toByteArray(), "AES")
